@@ -18,6 +18,10 @@ file_suffix = datetime.now().strftime("%Y%m%d_%H%M%S%f")
 
 
 def create_spark_session():
+    """
+        Creates and returns a SparkSession object.
+    """
+
     spark = SparkSession \
         .builder \
         .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:2.7.0") \
@@ -26,34 +30,57 @@ def create_spark_session():
 
 
 def process_song_data(spark, input_data, output_data):
-    # get filepath to song data file
+    """
+        Reads song data from json files, and extracts records from columns to store in song and artist tables.
+
+        Parameters:
+                spark (obj): SparkSession object
+                input_data (str): string of song data source path
+                ouput_data (str): string of song data destination path
+
+        Returns:
+                Spark Dataframe (obj): Spark dataframe containing extracted songs.
+    """
+
+    # gets filepath to song data file
     song_data = input_data
 
-    # read song data file
+    # reads song data file
     df = spark.read.json(song_data)
 
 
-    # extract columns to create songs table   
+    # extracts columns to create songs table   
     songs_table = df.dropDuplicates(["song_id"]).select("song_id", "title", "artist_id", "year", "duration")
 
         
-    # write songs table to parquet files partitioned by year and artist
+    # writes songs table to parquet files partitioned by year and artist
     songs_table.write.partitionBy("year", "artist_id").parquet(output_data + "songs.parquet" + "_" + file_suffix)
 
-    # extract columns to create artists table
+    # extracts columns to create artists table
     artists_table = df.dropDuplicates(["artist_id"]).select(col("artist_id").alias("artist_id"),\
                                                             col("artist_name").alias("name"), \
                                                             col("artist_location").alias("location"), \
                                                             col("artist_latitude").alias("latitude"), \
                                                             col("artist_longitude").alias("longitude"))
     
-    # write artists table to parquet files
+    # writes artists table to parquet files
     artists_table.write.parquet(output_data + "artists.parquet" + "_" + file_suffix)
 
     return df
 
 
 def process_log_data(spark, input_data, output_data, song_df):
+    """
+        Reads log data (events) from json files, and extracts records from columns to store in user, time and songplays tables.
+
+        Parameters:
+                spark (obj): SparkSession object
+                input_data (str): string of log data source path
+                ouput_data (str): string of log data destination path
+                song_df (obj): Song Dataframe object
+ 
+    """
+
     # get filepath to log data file
     log_data = input_data
 
