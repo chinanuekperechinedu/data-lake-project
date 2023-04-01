@@ -1,4 +1,4 @@
-# Data Lake with Amazon Redshift
+# Loading Data Lake with Spark through EMR Cluster
 
 ## Introduction
 ___
